@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>실패 엔딩</title>
+  <style>
+    body {
+      background-color: #FFFDF5;
+      color: white;
+      font-family: 'Noto Sans KR', sans-serif;
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      transition: background-color 3s ease;
+    }
+
+    .bg-gray {
+      background-color: #888;
+    }
+
+    .line {
+      opacity: 0;
+      font-size: 20px;
+      text-align: center;
+      margin: 10px 0;
+      transition: opacity 1.5s;
+    }
+
+    .start-button {
+      display: none;
+      margin-top: 30px;
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #444;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: opacity 1.5s;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="line">당신은 지금, 단지 다른 선택을 했을 뿐입니다.</div>
+  <div class="line">하지만 세상은 그것을</div>
+  <div class="line"><strong>'실패'</strong></div>
+  <div class="line">라고 부르겠죠.</div>
+  <div class="line">남들이 달려가는 동안,</div>
+  <div class="line">당신은 멈춰서 있습니다.</div>
+  <div class="line">이제 어떻게 하실 건가요?</div>
+
+  <button class="start-button" onclick="location.href='index.html'">처음으로</button>
+
+  <script>
+    window.onload = () => {
+      // 1. 배경 흰 → 회색으로 전환
+      setTimeout(() => {
+        document.body.classList.add('bg-gray');
+      }, 500);  // 0.5초 후 회색으로 전환 시작
+
+      // 2. 글씨 등장 (조금 뒤부터)
+      const lines = document.querySelectorAll('.line');
+      lines.forEach((line, i) => {
+        setTimeout(() => {
+          line.style.opacity = 1;
+        }, 3500 + 1800 * i);  // 회색 전환 완료된 후 3.5초부터 시작
+      });
+
+      // 3. 버튼 등장
+      setTimeout(() => {
+        const button = document.querySelector('.start-button');
+        button.style.display = 'block';
+        button.style.opacity = 0;
+        setTimeout(() => {
+          button.style.opacity = 1;
+        }, 100);
+      }, 3500 + 1800 * lines.length + 1000);
+    };
+  </script>
+
+</body>
+</html>

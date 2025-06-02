@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나이 선택</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #FFF7C2;
+      padding: 50px;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 30px;
+    }
+    .age-button {
+      padding: 12px 24px;
+      margin: 10px;
+      border: none;
+      border-radius: 8px;
+      background-color: #e0e0e0;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .age-button.selected {
+      background-color: #FFD6E0;
+      color: white;
+    }
+    #startBtn {
+      margin-top: 30px;
+      padding: 14px 32px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      background-color: #aaa;
+      color: black;
+      cursor: not-allowed;
+    }
+    #startBtn.active {
+      background-color: #E4D8FF;
+      cursor: pointer;
+    }
+    #no-age {
+      display: block;
+      margin-top: 20px;
+      font-size: 12px;
+      color: #666;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>나이를 선택해주세요</h1>
+  <div id="age-buttons">
+    <button class="age-button" data-age="choice1">생후 100일</button>
+    <button class="age-button" data-age="choice1">12개월</button>
+    <button class="age-button" data-age="choice1">24개월</button>
+    <button class="age-button" data-age="choice1">36개월</button>
+    <button class="age-button" data-age="choice5">47개월 29일</button>
+  </div>
+
+  <button id="startBtn" disabled>시작하기</button>
+  <span id="no-age">해당 나이가 없어요</span>
+
+  <script>
+    const ageButtons = document.querySelectorAll(".age-button");
+    const startBtn = document.getElementById("startBtn");
+    const noAge = document.getElementById("no-age");
+    let selectedAge = null;
+
+    ageButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        ageButtons.forEach(btn => btn.classList.remove("selected"));
+        button.classList.add("selected");
+        selectedAge = button.dataset.age;
+        startBtn.classList.add("active");
+        startBtn.disabled = false;
+      });
+    });
+
+    startBtn.addEventListener("click", () => {
+      if (selectedAge) {
+        window.location.href = `${selectedAge}.html`;
+      }
+    });
+
+    noAge.addEventListener("click", () => {
+      const message = 
+        "당신은 너무 늦었습니다.\n\n" +
+        "이미 기차는 출발했고, 정류장은 존재하지 않습니다.\n" +
+        "이제 시작한다는 건, 남들보다 뒤처진다는 뜻이니까요.\n\n" +
+        "시작 화면으로 돌아가겠습니까?";
+      alert(message);
+      window.location.href = "index.html";
+    });
+  </script>
+</body>
+</html>

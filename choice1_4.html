@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>4일차 스터디</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 30px;
+      margin-left: 350px;
+      background-color: #FFFDF5;
+    }
+    h2 { margin-bottom: 10px; }
+    .subject-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      max-width: 600px;
+    }
+    .subject {
+      border: 1px solid #aaa;
+      padding: 5px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      width: calc(20% - 10px);
+      box-sizing: border-box;
+      text-align: center;
+    }
+    .selected {
+      background-color: #FFD6E0;
+    }
+    #resultBtn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    canvas {
+      margin-top: 20px;
+    }
+    .buttons {
+      margin-top: 20px;
+      display: none;
+    }
+    .buttons button {
+      margin-right: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+
+    .result-container {
+      display: flex;
+      gap: 40px;
+      align-items: flex-start;
+      margin-top: 20px;
+    }
+
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .summary-inputs {
+      margin-top: 20px;
+      max-width: 600px;
+    }
+    .summary-inputs label {
+      display: block;
+      margin-bottom: 10px;
+    }
+    .summary-inputs input {
+      width: 100%;
+      padding: 5px;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h2>365일차. 진행도: ● ● ● ●</h2>
+  <p>과목을 선택해주세요. (8개)</p>
+  <div class="subject-list" id="subjects"></div>
+  <button id="resultBtn" disabled>생성하기</button>
+  <div class="result-container">
+    <canvas id="scheduleChart" width="450" height="450" style="display: none;"></canvas>
+    
+    <div class="right-panel">
+      <div class="summary-inputs" id="summaryInputs" style="display: none;"></div>
+  
+      <div class="buttons">
+        <button id="endStudy" disabled>끝내기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  const initialSubjects = [
+    "국어", "수학", "사회", "과학", "국어 문학", 
+    "수학 I", "영어 독해", "생명과학 I", "화학 I", "국어 비문학", 
+    "수학 II", "물리학 I", "지구과학 I", "휴식", "화법과 작문",
+    "수학 미적분", "언어와 매체", "생명과학 II", "화학 II", "기하와 벡터",
+    "한국사", "지구과학 II", "물리학 II", "일본어", "생활과 윤리",
+    "사회 문화", "한국지리", "세계지리", "윤리와 사상", "세계사",
+    "동아시아사", "정치와 법", "영어 문법", "경제", "아랍어"
+  ];
+  const excludedSubjects = ["사회", "휴식", "생활과 윤리", "사회 문화", "한국지리", "세계지리", "윤리와 사상", "세계사", "동아시아사", "정치와 법", "경제"];
+  const selected = new Set();
+  const subjectColors = {};
+  const chartColors = [
+    "#FF6384", "#36A2EB", "#FFCE56", "#8AFFC1", "#C299FF", "#FFA07A", "#00CED1", "#FFB6C1"
+  ];
+  const mealColor = "#cccccc", sleepColor = "#999999";
+
+  const subjectsDiv = document.getElementById("subjects");
+  const resultBtn = document.getElementById("resultBtn");
+  const canvas = document.getElementById("scheduleChart");
+  const ctx = canvas.getContext("2d");
+  const buttonsDiv = document.querySelector(".buttons");
+
+  function createSubjectDiv(name) {
+    const div = document.createElement("div");
+    div.textContent = name;
+    div.className = "subject";
+
+    div.onclick = () => {
+      if (excludedSubjects.includes(name)) {
+        alert("의대 진학에 필요하지 않습니다.");
+        return;
+      }
+
+      const isSelected = selected.has(name);
+      if (isSelected) {
+        selected.delete(name);
+        div.classList.remove("selected");
+      } else if (selected.size < 8) {
+        selected.add(name);
+        div.classList.add("selected");
+        subjectColors[name] = chartColors[selected.size - 1];
+      }
+
+      resultBtn.disabled = selected.size !== 8;
+    };
+
+    return div;
+  }
+
+  initialSubjects.forEach((subj) => {
+    const div = createSubjectDiv(subj);
+    subjectsDiv.appendChild(div);
+  });
+
+  function getScheduleData() {
+  const data = [];
+  const labels = [];
+  const colors = [];
+
+  // 00:00–02:00 (2시간): 꿈나라 (수면)
+  data.push(2); labels.push("꿈나라"); colors.push(sleepColor);
+
+  const selectedArray = Array.from(selected);
+  const durations = [3, 2, 2, 4, 2, 1, 2, 4]; // 과목별 시간 분배 (총 20시간)
+
+  for (let i = 0; i < 8; i++) {
+    data.push(durations[i]);
+    labels.push(selectedArray[i]);
+    colors.push(subjectColors[selectedArray[i]]);
+
+    // 첫 번째 과목 후 아침 삽입
+    if (i === 0) {
+      data.push(1);
+      labels.push("아침");
+      colors.push(mealColor);
+    }
+
+    // 네 번째 과목 후 점심 삽입
+    if (i === 3) {
+      data.push(1);
+      labels.push("점심");
+      colors.push(mealColor);
+    }
+  }
+
+  return { data, labels, colors };
+}
+
+  
+  function createSummaryInputs() {
+      const summaryDiv = document.getElementById("summaryInputs");
+      summaryDiv.innerHTML = "";
+      summaryDiv.style.display = "block";
+
+      // 제목 추가
+      const title = document.createElement("h3");
+      title.textContent = "과목 한 줄 요약";
+      summaryDiv.appendChild(title);
+
+      Array.from(selected).forEach(subject => {
+        const label = document.createElement("label");
+        label.textContent = `✔ ${subject}:`;
+        const input = document.createElement("input");
+        input.type = "text";
+        input.dataset.subject = subject;
+
+        input.addEventListener("input", checkSummariesFilled);
+
+        label.appendChild(input);
+        summaryDiv.appendChild(label);
+      });
+    }
+
+
+    function checkSummariesFilled() {
+      const inputs = document.querySelectorAll(".summary-inputs input");
+      const allFilled = Array.from(inputs).every(input => input.value.trim() !== "");
+      document.getElementById("endStudy").disabled = !allFilled;
+    }
+
+
+  let chartInstance;
+
+  resultBtn.onclick = () => {
+    const schedule = getScheduleData();
+    canvas.style.display = "block";
+    buttonsDiv.style.display = "block";
+    createSummaryInputs();
+
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: schedule.labels,
+        datasets: [{
+          data: schedule.data,
+          backgroundColor: schedule.colors,
+        }]
+      },
+      options: {
+        responsive: false,
+        plugins: {
+          legend: {
+            position: 'right'
+          }
+        }
+      }
+    });
+  };
+
+  document.getElementById("endStudy").onclick = () => {
+    const answer = confirm("공부를 하였지만 아직 실력이 부족합니다.\n의대 진학을 위해 좀 더 달려볼까요?");
+    if (answer) {
+      location.href = "choice1_roop.html";
+    } else {
+      location.href = "choice1_end.html";
+    }
+  };
+</script>
+
+</body>
+</html>
